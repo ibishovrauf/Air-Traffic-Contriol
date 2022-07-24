@@ -204,7 +204,8 @@ class Screen:
         self.fontamb = Fastfont(self.win, 'Arial', 14, amber, False, False)  # name, size, bold,italic
         self.fontnav = Fastfont(self.win, 'Arial', 12, lightgreyblue, False, False)  # name, size, bold,italic
         self.fontsys = Fastfont(self.win, 'Helvetica', 14, white, False, False)  # name, size, bold,italic
-
+        
+        
         # Edit window: 6 line of 64 chars
         nch = lst[3]  # number of chars per line
         nlin = lst[4]  # number of lines in windows
@@ -666,13 +667,13 @@ class Screen:
                 pos.centery = trafy[i]
                 dy = int(self.fontrad.linedy * 7 / 6)
 
-                # Draw aircraft altitude line
-                print("\n")
-                print("Plane ID: ", bs.traf.id[i])
-                print("altitude: ", bs.traf.alt[i])
-                print("latitude: ", bs.traf.lat[i])
-                print("longitude: ", bs.traf.lon[i])
+                # print("\n")
+                # print("Plane ID: ", bs.traf.tas[i])
+                # print("altitude: ", bs.traf.alt[i])
+                # print("latitude: ", bs.traf.lat[i])
+                # print("longitude: ", bs.traf.lon[i])
 
+                # Draw aircraft altitude line
                 if self.isoalt>1e-7:
                     pg.draw.line(self.win,white,(int(trafx[i]),int(trafy[i])),(int(trafx[i]),int(trafy[i]+bs.traf.alt[i]*self.isoalt)))
 
@@ -764,14 +765,16 @@ class Screen:
             nconf = len(bs.traf.cd.confpairs_unique)
             n2conf = len(bs.traf.cd.confpairs)
 
+            # print(bs.traf.cd.confpairs_unique)
+            
             if nconf>0:
-
                 for j in range(n2conf):
                     i = bs.traf.id2idx(bs.traf.cd.confpairs[j][0])
                     if i>=0 and i<bs.traf.ntraf and (i in trafsel):
                         latcpa, loncpa = geo.kwikpos(bs.traf.lat[i], bs.traf.lon[i], \
                                                     bs.traf.trk[i], bs.traf.cd.tcpamax[j] * bs.traf.gs[i] / nm)
                         altcpa = bs.traf.lat[i] + bs.traf.vs[i]*bs.traf.cd.tcpamax[j]
+                        
                         xc, yc = self.ll2xy(latcpa,loncpa)
                         yc = yc - altcpa * self.isoalt
                         pg.draw.line(self.win,amber,(xc,yc),(trafx[i],trafy[i]))
