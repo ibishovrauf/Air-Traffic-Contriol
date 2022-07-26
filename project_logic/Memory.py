@@ -1,15 +1,5 @@
-from dataclasses import dataclass
 import random
 
-
-@dataclass
-class AirCraft:
-    lat: float
-    long: float
-    alt: float
-    heading: float
-    speed: float
-    aceleration: float
 
 class Memory:
     """
