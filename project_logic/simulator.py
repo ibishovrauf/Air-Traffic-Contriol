@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from scenario.scenario_custom import Scenario
 
 
 @dataclass
@@ -24,9 +25,14 @@ class Simulator:
         self._step = 0
         self._max_step = max_step
         self._training_epochs = training_epochs
+        self._scen = Scenario()
     
     def run(self, episode, epsilon) -> list:
         """
         Runs an episode of simulation, then starts a training session
         """
-        pass
+
+        #create scenario. We can pass number of aircrafts
+        self._scen.create_scenario()
+        return []
+
