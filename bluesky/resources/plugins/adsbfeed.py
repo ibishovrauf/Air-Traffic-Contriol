@@ -5,6 +5,7 @@ from bluesky import stack, settings, traf
 from bluesky.tools.network import TcpSocket
 from bluesky.tools import aero
 import adsb_decoder as decoder
+from bluesky.traffic.traffic import Traffic
 
 ## Default settings
 # Mode-S / ADS-B server hostname/ip, and server port
@@ -26,6 +27,7 @@ def init_plugin():
         'update_interval': 0.0,
         'preupdate':       reader.update
         }
+
 
     stackfunctions = {
         "DATAFEED": [

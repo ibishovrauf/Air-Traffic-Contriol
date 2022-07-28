@@ -260,9 +260,10 @@ def ic(filename : 'string' = ''):
     bs.sim.reset()
 
     # Get the filename of new scenario
-    if not filename:
-        filename = bs.scr.show_file_dialog()
 
+
+
+    bs.traf.mcre(5)
     # Clean up filename
     filename = filename.strip()
 

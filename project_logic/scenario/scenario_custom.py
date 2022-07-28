@@ -1,8 +1,7 @@
-from bluesky import traf
-from bluesky import s
+import bluesky as bs
+
 class Scenario:
     def __init__(self, ac_n = 5):
-        self.traf = traf()
-
+        self.ac_n = ac_n
     def create_scenario(self):
-        self.traf.mcre(n=5)
+        bs.traf.mcre(n=self.ac_n)

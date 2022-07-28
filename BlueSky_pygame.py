@@ -4,19 +4,24 @@ from __future__ import print_function
 import pygame as pg
 import bluesky as bs
 from bluesky.ui.pygame import splash
+import bluesky.resources.data as data
+from bluesky import settings
+from project_logic.scenario.scenario_custom import Scenario
+
 
 
 def main():
     """ Start the mainloop (and possible other threads) """
     splash.show()
     bs.init(gui='pygame')
-    # bs.sim.op()
+    bs.sim.op()
     bs.scr.init()
 
     # Main loop for BlueSky
     while not bs.sim.state == bs.END:
         bs.sim.step()   # Update sim
         bs.scr.update()   # GUI update
+
 
     bs.sim.quit()
     pg.quit()

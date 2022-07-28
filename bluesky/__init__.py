@@ -82,6 +82,7 @@ def init(mode='sim', configfile=None, scenfile=None, discoverable=False,
         net = Node(settings.simevent_port,
                    settings.simstream_port)
 
+
         # Initialize remaining modules
         varexplorer.init()
         if scenfile:
@@ -89,4 +90,5 @@ def init(mode='sim', configfile=None, scenfile=None, discoverable=False,
 
     from bluesky.core import plugin
     plugin.init(mode)
+
     stack.init(mode)
