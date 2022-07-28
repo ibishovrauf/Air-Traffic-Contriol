@@ -52,7 +52,6 @@ def process(from_pcall=None):
     # First check for commands in scenario file
     if from_pcall is None:
         checkscen()
-
     # Process stack of commands
     for cmdline in Stack.commands(from_pcall):
         success = True
@@ -63,7 +62,6 @@ def process(from_pcall=None):
         cmd, argstring = argparser.getnextarg(cmdline)
         cmdu = cmd.upper()
         cmdobj = Command.cmddict.get(cmdu)
-
         # If no function is found for 'cmd', check if cmd is actually an aircraft id
         if not cmdobj and cmdu in bs.traf.id:
             cmd, argstring = argparser.getnextarg(argstring)
@@ -83,7 +81,6 @@ def process(from_pcall=None):
                     else:
                         echoflags = bs.BS_FUNERR
                         echotext = f'Syntax error: {echotext or cmdobj.brieftext()}'
-
             except ArgumentError as e:
                 success = False
                 echoflags = bs.BS_ARGERR
@@ -95,7 +92,7 @@ def process(from_pcall=None):
                 echotext = f'Error calling function implementation of {cmdu}: {header}\n' + \
                     'Traceback printed to terminal.'
                 traceback.print_exc()
-
+            
         # ----------------------------------------------------------------------
         # ZOOM command (or use ++++  or --  to zoom in or out)
         # ----------------------------------------------------------------------
@@ -115,17 +112,16 @@ def process(from_pcall=None):
         else:
             success = False
             echoflags = bs.BS_CMDERR
+
             if not argstring:
                 echotext = f'Unknown command or aircraft: {cmd}'
             else:
                 echotext = f'Unknown command: {cmd}'
-
         # Recording of actual validated commands
         if success:
             recorder.savecmd(cmdu, cmdline)
         elif not Stack.sender_rte:
             echotext = f'{cmdline}\n{echotext}'
-
         # Always return on command
         if echotext:
             bs.scr.echo(echotext, echoflags)
@@ -249,7 +245,7 @@ def pcall(fname, *pcall_arglst):
 
 
 @command(aliases=('LOAD', 'OPEN'))
-def ic(filename : 'string' = ''):
+def ic(filename : str = ''):
     ''' IC: Load a scenario file (initial condition).
 
         Arguments:
@@ -261,8 +257,8 @@ def ic(filename : 'string' = ''):
 
     # Get the filename of new scenario
     if not filename:
-        filename = bs.scr.show_file_dialog()
-
+        filename = "C:/Users/raufi/bluesky/scenario/ASAS/ASAS-01.scn"
+    #     filename = bs.scr.show_file_dialog()
     # Clean up filename
     filename = filename.strip()
 
@@ -290,7 +286,7 @@ def ic(filename : 'string' = ''):
 
 
 @command(aliases=('SCEN',))
-def scenario(name: 'string'):
+def scenario(name: str):
     """ SCENARIO sets the scenario name for the current simulation.
 
         Arguments:

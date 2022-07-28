@@ -1,7 +1,7 @@
 import configparser
 import datetime
 
-from Memory import Memory
+from project_logic.Memory import Memory
 from simulator import Simulator
 
 if __name__ == '__main__':
