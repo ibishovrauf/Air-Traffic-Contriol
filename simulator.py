@@ -63,7 +63,8 @@ class Simulator:
         bs.scr.init()
 
         # Main loop for BlueSky
-        bs.traf.mcre(5)
+        #self._TrafficGen.genereta_scn(seed=episode)
+        self._AirTraffic.mcre(5)
         step=0
         while not bs.sim.state == bs.END and step < 6000:
             step+=1
