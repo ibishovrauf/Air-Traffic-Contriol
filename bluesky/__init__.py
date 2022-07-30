@@ -13,7 +13,6 @@ BS_CMDERR = 4
 
 # simulation states
 INIT, HOLD, OP, END = list(range(4))
-
 # Startup flags
 mode = ''
 gui = ''

@@ -64,31 +64,36 @@ class Simulator:
 
         # Main loop for BlueSky
         #self._TrafficGen.genereta_scn(seed=episode)
-        self._AirTraffic.mcre(5)
+
         step=0
-        while not bs.sim.state == bs.END and step < 6000:
-            step+=1
-            bs.sim.step() # Update sim
-            bs.scr.update()   # GUI update
-            if bs.traf.cd.confpairs:
-                self._create_aircraft_list()
-                for aircraft in self._AirTraffic.cd.confpairs_unique:
-                    current_state = self._get_state(aircraft)
-                    reward = 0
-    
-                    action = self._choose_action(current_state, epsilon)
-                    self._set_action(action)
-        
-                    old_state = current_state
-                    old_action = action
+        while step < 6000: # We generate n aircraft every 6000 steps
+            bs.sim.reset()
+            self._AirTraffic.mcre(5)
+            while not bs.sim.state == bs.END:
+                step+=1
+                bs.sim.step() # Update sim
+                bs.scr.update()   # GUI update
+                if bs.traf.cd.confpairs:
+                    self._create_aircraft_list()
+                    for aircraft in self._AirTraffic.cd.confpairs_unique:
+                        current_state = self._get_state(aircraft)
+                        reward = 0
 
-                    bs.sim.step()
-                    bs.scr.update()
+                        action = self._choose_action(current_state, epsilon)
+                        self._set_action(action)
 
-                    current_state = self._get_state(aircraft)
-                    reward = self._calc_reward(action)
-                    self._Memory.add_sample((old_state, old_action, reward, current_state))
-   
+                        old_state = current_state
+                        old_action = action
+
+                        bs.sim.step()
+                        bs.scr.update()
+
+                        current_state = self._get_state(aircraft)
+                        reward = self._calc_reward(action)
+                        self._Memory.add_sample((old_state, old_action, reward, current_state))
+                if step%1000 == 0: # example. Here we can set condition for out conflict. If current_time - conflict_time > 5
+                    break
+
         print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
         pg.quit()
