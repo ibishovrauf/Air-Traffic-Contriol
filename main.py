@@ -1,7 +1,7 @@
 import configparser
 import datetime
 
-from Memory import Memory
+from project_logic.Memory import Memory
 from simulator import Simulator
 
 if __name__ == '__main__':
@@ -27,7 +27,6 @@ if __name__ == '__main__':
     simulation = Simulator(
         memory=memory,
         model=model,
-        AirTraffic=None,
         gamma=gamma,
         n_simulation=None,
         state_shape=num_state,

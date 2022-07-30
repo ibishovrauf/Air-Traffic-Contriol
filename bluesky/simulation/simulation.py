@@ -44,7 +44,7 @@ class Simulation:
         self.utc = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
         # Flag indicating running at fixed rate or fast time
-        self.ffmode = False
+        self.ffmode = True
         self.ffstop = None
 
         # Flag indicating whether timestep can be varied to ensure realtime op
@@ -69,8 +69,9 @@ class Simulation:
         # When running at a fixed rate, or when in hold/init,
         # increment system time with sysdt and calculate remainder to sleep.
         remainder = self.syst - time.time()
-        if (not self.ffmode or self.state != bs.OP) and remainder > MINSLEEP:
-            time.sleep(remainder)
+        # if (not self.ffmode or self.state != bs.OP) and remainder > MINSLEEP:
+        #     # time.sleep(remainder)
+        #     pass
 
         # Always update stack
         simstack.process()
