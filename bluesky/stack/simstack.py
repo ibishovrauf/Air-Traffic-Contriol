@@ -253,10 +253,9 @@ def ic(filename : str = ''):
           to load previous scenario again. '''
 
     # reset sim always
-    bs.sim.reset()
+    #bs.sim.reset()
 
     # Get the filename of new scenario
-
 
     # Reset sim and open new scenario file
     if filename:

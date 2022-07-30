@@ -57,18 +57,17 @@ class Simulator:
         start_time = timeit.default_timer()
 
         # first, generate the route file for this simulation
-        # self._TrafficGen.genereta_scn(seed=episode)
 
         splash.show()
         # bs.sim.op()
         bs.scr.init()
 
         # Main loop for BlueSky
+        bs.traf.mcre(5)
         step=0
         while not bs.sim.state == bs.END and step < 6000:
             step+=1
-
-            bs.sim.step()   # Update sim
+            bs.sim.step() # Update sim
             bs.scr.update()   # GUI update
             if bs.traf.cd.confpairs:
                 self._create_aircraft_list()
