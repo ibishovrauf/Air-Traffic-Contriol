@@ -3,6 +3,7 @@ from __future__ import print_function
 import pygame as pg
 import bluesky as bs
 from bluesky.ui.pygame import splash
+import timeit
 
 class Simulator:
 
@@ -22,6 +23,11 @@ class Simulator:
         """
         Runs an episode of simulation, then starts a training session
         """
+        start_time = timeit.default_timer()
+
+        # first, generate the route file for this simulation
+        self._TrafficGen.genereta_scn(seed=episode)
+
         splash.show()
         bs.init(gui='pygame')
         # bs.sim.op()
@@ -34,6 +40,22 @@ class Simulator:
             step+=1
             bs.sim.step()   # Update sim
             bs.scr.update()   # GUI update
+            if bs.traf.cd.confpairs:
+                current_state = self._get_state()
+                reward = None
+    
+                action = self._choose_action(current_state, epsilon)
+                self._set_action(action)
+        
+                old_state = current_state
+                old_action = action
+
+                bs.sim.step()
+                bs.scr.update()
+
+                current_state = self._get_state()
+                reward = self._calc_reward()
+                self._Memory.add_sample((old_state, old_action, reward, current_state))
         bs.sim.quit()
         pg.quit()
 
