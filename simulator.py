@@ -89,11 +89,20 @@ class Simulator:
                     reward = self._calc_reward(action)
                     self._Memory.add_sample((old_state, old_action, reward, current_state))
    
-   
+        print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
         pg.quit()
+        simulation_time = round(timeit.default_timer() - start_time, 1)
 
-        print('BlueSky normal end.')
+        print("Training...")
+        start_time = timeit.default_timer()
+        for _ in range(self._training_epochs):
+            self._replay()
+        training_time = round(timeit.default_timer() - start_time, 1)
+
+        return simulation_time, training_time
+
+
 
     def _create_aircraft_list(self):
         for index in range(len(self._AirTraffic.id)):
@@ -132,3 +141,26 @@ class Simulator:
 
     def _calc_reward(self, action):
         pass
+
+    def _replay(self):
+
+        batch = self._Memory.get_samples(self._Model.batch_size)
+        if len(batch) > 0:  # if the memory is full enough
+            states = np.array([val[0] for val in batch])  # extract states from the batch
+            next_states = np.array([val[3] for val in batch])  # extract next states from the batch
+
+            q_s_a = self._Model.predict_batch(states)  # predict Q(state), for every sample
+            q_s_a_d = self._Model.predict_batch(next_states)  # predict Q(next_state), for every sample
+
+            # setup training arrays
+            x = np.zeros((len(batch), self._num_states))
+            y = np.zeros((len(batch), self._num_actions))
+
+            for i, b in enumerate(batch):
+                state, action, reward, _ = b[0], b[1], b[2], b[3]  # extract data from one sample
+                current_q = q_s_a[i]  # get the Q(state) predicted before
+                current_q[action] = reward + self._gamma * np.amax(q_s_a_d[i])  # update Q(state, action)
+                x[i] = state
+                y[i] = current_q  # Q(state) that includes the updated action value
+
+            self._Model.train_batch(x, y)  # train the NN
