@@ -1,15 +1,8 @@
-from dataclasses import dataclass
-from scenario.scenario_custom import Scenario
-
-
-@dataclass
-class AirCraft:
-    lat: float
-    long: float
-    alt: float
-    heading: float
-    speed: float
-    aceleration: float
+""" Pygame BlueSky start script """
+from __future__ import print_function
+import pygame as pg
+import bluesky as bs
+from bluesky.ui.pygame import splash
 
 
 class Simulator:
@@ -25,14 +18,25 @@ class Simulator:
         self._step = 0
         self._max_step = max_step
         self._training_epochs = training_epochs
-        self._scen = Scenario()
-    
+
     def run(self, episode, epsilon) -> list:
         """
         Runs an episode of simulation, then starts a training session
         """
+        splash.show()
+        bs.init(gui='pygame')
+        # bs.sim.op()
+        bs.scr.init()
 
-        #create scenario. We can pass number of aircrafts
-        self._scen.create_scenario()
-        return []
+        # Main loop for BlueSky
+        step=0
+        while not bs.sim.state == bs.END and step < 6000:
+            print(step)
+            step+=1
+            bs.sim.step()   # Update sim
+            bs.scr.update()   # GUI update
+        bs.sim.quit()
+        pg.quit()
+
+        print('BlueSky normal end.')
 

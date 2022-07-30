@@ -1,8 +1,8 @@
 import configparser
 import datetime
 
-from project_logic.Memory import Memory
-from project_logic.simulator import Simulator
+from Memory import Memory
+from simulator import Simulator
 
 if __name__ == '__main__':
     content = configparser.ConfigParser()
@@ -11,12 +11,12 @@ if __name__ == '__main__':
     memory_min = content['memory'].getint('min_size')
     memory_max = content['memory'].getint('max_size')
 
-    gamma = content['agent'].getint('gamma')
+    gamma = content['agent'].get('gamma')
     num_state = content['agent'].getint('num_state')
     num_action = content['agent'].getint('num_action')
 
-    max_steps = content['simulator'].getint('max_steps')
-    total_episodes = content['simulator'].getint('total_episodes')
+    max_steps = content['simulation'].getint('max_steps')
+    total_episodes = content['simulation'].getint('total_episodes')
 
     batch_size = content['model'].getint('batch_size')
     learning_rate = content['model'].getint('learning_rate')
