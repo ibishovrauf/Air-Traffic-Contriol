@@ -7,6 +7,8 @@ import timeit
 import numpy as np
 from dataclasses import dataclass
 
+from random import randint
+
 @dataclass
 class AirCraft:
     id: int
@@ -66,33 +68,30 @@ class Simulator:
         #self._TrafficGen.genereta_scn(seed=episode)
 
         step=0
-        while step < 6000: # We generate n aircraft every 6000 steps
-            bs.sim.reset()
-            self._AirTraffic.mcre(5)
-            while not bs.sim.state == bs.END:
-                step+=1
-                bs.sim.step() # Update sim
-                bs.scr.update()   # GUI update
-                if bs.traf.cd.confpairs:
-                    self._create_aircraft_list()
-                    for aircraft in self._AirTraffic.cd.confpairs_unique:
-                        current_state = self._get_state(aircraft)
-                        reward = 0
+        self._generate_conf_aircraft()
+        while not bs.sim.state == bs.END and step < 6000:
+            step+=1
+            bs.sim.step() # Update sim
+            bs.scr.update()   # GUI update
+            if bs.traf.cd.confpairs:
+                self._create_aircraft_list()
+                for aircraft in self._AirTraffic.cd.confpairs_unique:
+                    print("Conflict:", aircraft)
+                    current_state = self._get_state(aircraft)
+                    reward = 0
 
-                        action = self._choose_action(current_state, epsilon)
-                        self._set_action(action)
+                    action = self._choose_action(current_state, epsilon)
+                    self._set_action(action)
 
-                        old_state = current_state
-                        old_action = action
+                    old_state = current_state
+                    old_action = action
 
-                        bs.sim.step()
-                        bs.scr.update()
+                    bs.sim.step()
+                    bs.scr.update()
 
-                        current_state = self._get_state(aircraft)
-                        reward = self._calc_reward(action)
-                        self._Memory.add_sample((old_state, old_action, reward, current_state))
-                if step%1000 == 0: # example. Here we can set condition for out conflict. If current_time - conflict_time > 5
-                    break
+                    current_state = self._get_state(aircraft)
+                    reward = self._calc_reward(action)
+                    self._Memory.add_sample((old_state, old_action, reward, current_state))
 
         print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
@@ -125,7 +124,6 @@ class Simulator:
 
     def _get_state(self, current_aircraft):
         state = np.zeros(self._state_shape)
-
         for aircraft in self._aircrafts:
             if current_aircraft.is_in_state(aircraft):
                 aircraft_values = np.array([ aircraft.lat,
@@ -134,9 +132,20 @@ class Simulator:
                                     aircraft.heading,
                                     aircraft.speed,
                                     aircraft.aceleration])
-                state[current_aircraft.state_index(aircraft)] = aircraft
+                state[current_aircraft.state_index(aircraft)] = aircraft_values
 
         return state
+
+    def _generate_conf_aircraft(self):
+        self._AirTraffic.cd.setmethod(name='ON')
+        self._AirTraffic.mcre(3, acalt=400, acspd=100)
+        for index in range(len(self._AirTraffic.id)):
+            # target.append(self._AirTraffic.id[index])
+            idtmp = chr(randint(65, 90)) + chr(randint(65, 90)) + '{:>05}'
+            acid = idtmp.format(index)
+            self._AirTraffic.creconfs(acid=acid,actype='B744',targetidx=index,dpsi=60,dcpa= 2.5,tlosh=400)
+
+
 
     def _choose_action(self, state, epsilon):
         pass
