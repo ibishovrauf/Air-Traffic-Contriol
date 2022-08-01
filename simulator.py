@@ -4,13 +4,14 @@ import pygame as pg
 import bluesky as bs
 from bluesky.ui.pygame import splash
 
-
-
 import timeit
 import numpy as np
 from dataclasses import dataclass
 
 import random
+
+from collections import defaultdict
+
 
 @dataclass
 class AirCraft:
@@ -23,20 +24,24 @@ class AirCraft:
     aceleration: float
 
     def distance(self, aircraft):
-        return np.sqrt((self.alt - aircraft.alt)**2 + ((self.lat - aircraft.lat)*111.139)**2 + ((self.lon - aircraft.lon)*111.139)**2)
+        return np.sqrt((self.alt - aircraft.alt) ** 2 + ((self.lat - aircraft.lat) * 111.139) ** 2 + (
+                    (self.lon - aircraft.lon) * 111.139) ** 2)
 
     def is_in_state(self, aircraft):
-        if (abs(self.lon - aircraft.lon))*111.139 < 300 and (abs(self.lat - aircraft.lat))*111.139 < 300 and (abs(self.alt - aircraft.alt)) < 1000:
+        if (abs(self.lon - aircraft.lon)) * 111.139 < 300 and (abs(self.lat - aircraft.lat)) * 111.139 < 300 and (
+        abs(self.alt - aircraft.alt)) < 1000:
             return True
         return False
-    
+
     def state_index(self, aircraft):
-        return [(self.alt - aircraft.alt)//300, (self.lat - aircraft.lat)*111.139//20 ,(self.lon - aircraft.lon)*111.139//20]
+        return [(self.alt - aircraft.alt) // 300, (self.lat - aircraft.lat) * 111.139 // 20,
+                (self.lon - aircraft.lon) * 111.139 // 20]
 
     def __eq__(self, aircraft) -> bool:
         if aircraft == object:
             return self.id == aircraft.id
-        return self.id == aircraft # if aircraft is string that contein only id
+        return self.id == aircraft  # if aircraft is string that contein only id
+
 
 class Simulator:
 
@@ -46,15 +51,17 @@ class Simulator:
         self._gamma = gamma
         self._n_simulation = n_simulation
         self._state_shape = state_shape
-        self._num_actions = num_actions 
+        self._num_actions = num_actions
         self._step = 0
         self._max_step = max_step
         self._training_epochs = training_epochs
         self._aircrafts = np.array([])
+        self._AltCmd = 0
+        self._SpdCmd = 0
+        self._action_dict = defaultdict(list)
 
         bs.init(gui='pygame')
         self._AirTraffic = bs.traf
-
 
     def run(self, episode, epsilon) -> list:
         """
@@ -70,14 +77,14 @@ class Simulator:
         bs.scr.init()
 
         # Main loop for BlueSky
-        #self._TrafficGen.genereta_scn(seed=episode)
+        # self._TrafficGen.genereta_scn(seed=episode)
 
-        step=0
+        step = 0
         self._generate_conf_aircraft()
         while not bs.sim.state == bs.END and step < 6000:
-            step+=1
-            bs.sim.step() # Update sim
-            bs.scr.update()   # GUI update
+            step += 1
+            bs.sim.step()  # Update sim
+            bs.scr.update()  # GUI update
             if bs.traf.cd.confpairs:
                 self._create_aircraft_list()
                 for aircrafts in self._AirTraffic.cd.confpairs_unique:
@@ -89,6 +96,7 @@ class Simulator:
 
                         action = self._choose_action(current_state, epsilon)
                         self._set_action(action, aircraft)
+                        self._action_dict[aircraft].append(action)
 
                         old_state = current_state
                         old_action = action
@@ -97,8 +105,10 @@ class Simulator:
                         bs.scr.update()
 
                         current_state = self._get_state(aircraft)
-                        reward = self._calc_reward(action)
+                        reward = self._calc_reward(action, aircraft)
+                        print('Reward:',reward)
                         self._Memory.add_sample((old_state, old_action, reward, current_state))
+
 
         print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
@@ -115,8 +125,6 @@ class Simulator:
 
         return simulation_time, training_time
 
-
-
     def _create_aircraft_list(self):
         for index in range(len(self._AirTraffic.id)):
             aircraft = AirCraft(
@@ -129,7 +137,6 @@ class Simulator:
                 speed=self._AirTraffic.tas[index]
             )
             np.add(self._aircrafts, aircraft)
-        
 
     def _get_state(self, current_aircraft):
         state = np.zeros(self._state_shape)
@@ -147,6 +154,7 @@ class Simulator:
                                             aircraft.aceleration])
                 state[current_aircraft.state_index(aircraft)] = aircraft_values
         return state
+
     def _generate_conf_aircraft(self):
         self._AirTraffic.cd.setmethod(name='ON')
         self._AirTraffic.mcre(3, acalt=400, acspd=100)
@@ -154,9 +162,7 @@ class Simulator:
             # target.append(self._AirTraffic.id[index])
             idtmp = chr(random.randint(65, 90)) + chr(random.randint(65, 90)) + '{:>05}'
             acid = idtmp.format(index)
-            self._AirTraffic.creconfs(acid=acid,actype='B744',targetidx=index,dpsi=60,dcpa= 2.5,tlosh=400)
-
-
+            self._AirTraffic.creconfs(acid=acid, actype='B744', targetidx=index, dpsi=60, dcpa=2.5, tlosh=400)
 
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:
@@ -167,34 +173,58 @@ class Simulator:
     def _set_action(self, action, aircraft):
         aircraft_index = self._AirTraffic.id.index(aircraft)
         if action == 0:
-            self._AirTraffic.alt[aircraft_index] -=1200
+            self._AirTraffic.alt[aircraft_index] -= 1200
+            self._AltCmd = -1200
         elif action == 1:
-            self._AirTraffic.alt[aircraft_index] -=600
+            self._AirTraffic.alt[aircraft_index] -= 600
+            self._AltCmd = -600
         elif action == 2:
-            self._AirTraffic.alt[aircraft_index] +=600
+            self._AirTraffic.alt[aircraft_index] += 600
+            self._AltCmd = 600
         elif action == 3:
-            self._AirTraffic.alt[aircraft_index] +=1200
+            self._AirTraffic.alt[aircraft_index] += 1200
+            self._AltCmd = 1200
         elif action == 4:
-            self._AirTraffic.hdg[aircraft_index] +=6
+            self._AirTraffic.hdg[aircraft_index] += 6
         elif action == 5:
-            self._AirTraffic.hdg[aircraft_index] -=6
+            self._AirTraffic.hdg[aircraft_index] -= 6
         elif action == 6:
-            self._AirTraffic.tas[aircraft_index] +=30
+            self._AirTraffic.tas[aircraft_index] += 30
+            self._SpdCmd = 30
         elif action == 7:
-            self._AirTraffic.tas[aircraft_index] +=20
+            self._AirTraffic.tas[aircraft_index] += 20
+            self._SpdCmd = 20
         elif action == 8:
-            self._AirTraffic.tas[aircraft_index] +=10
+            self._AirTraffic.tas[aircraft_index] += 10
+            self._SpdCmd = 10
         elif action == 9:
-            self._AirTraffic.tas[aircraft_index] -=10
+            self._AirTraffic.tas[aircraft_index] -= 10
+            self._SpdCmd = -10
         elif action == 10:
-            self._AirTraffic.tas[aircraft_index] -=20
+            self._AirTraffic.tas[aircraft_index] -= 20
+            self._SpdCmd = -20
         elif action == 11:
-            self._AirTraffic.tas[aircraft_index] -=30
+            self._AirTraffic.tas[aircraft_index] -= 30
+            self._SpdCmd = -30
         else:
             return None
 
-    def _calc_reward(self, action):
-        pass
+    def _calc_reward(self, action, ac_id):
+        """
+        Reward can be divided into infeasible solution and feasible solution.
+        The infeasible solution refers to the solution beyond the scope of aircraft
+        performance or in violation of actual control habits, such as the climbing action
+        followed by the descending action. The feasible solution is the solution other
+        than the infeasible solution.
+        """
+        if len(self._action_dict[ac_id]) > 1:
+            if (self._action_dict[ac_id][-1] in [0, 1] and self._action_dict[ac_id][-2] in [2, 3]) \
+                    or (self._action_dict[ac_id][-1] in [2, 3] and self._action_dict[ac_id][-2] in [0, 1]):
+                return -1
+        r_a = 1 - self._AltCmd / 2000
+        r_s = 0.95 - self._SpdCmd / 100
+        r_h = 0.3  #
+        return r_a + r_s + r_h
 
     def _replay(self):
 
