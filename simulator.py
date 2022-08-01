@@ -7,7 +7,7 @@ import timeit
 import numpy as np
 from dataclasses import dataclass
 
-from random import randint
+import random
 
 @dataclass
 class AirCraft:
@@ -75,23 +75,25 @@ class Simulator:
             bs.scr.update()   # GUI update
             if bs.traf.cd.confpairs:
                 self._create_aircraft_list()
-                for aircraft in self._AirTraffic.cd.confpairs_unique:
-                    print("Conflict:", aircraft)
-                    current_state = self._get_state(aircraft)
-                    reward = 0
+                for aircrafts in self._AirTraffic.cd.confpairs_unique:
+                    aircrafts = list(aircrafts)
+                    for aircraft in aircrafts:
+                        print("Conflict:", aircraft)
+                        current_state = self._get_state(aircraft)
+                        reward = 0
 
-                    action = self._choose_action(current_state, epsilon)
-                    self._set_action(action)
+                        action = self._choose_action(current_state, epsilon)
+                        self._set_action(action, aircraft)
 
-                    old_state = current_state
-                    old_action = action
+                        old_state = current_state
+                        old_action = action
 
-                    bs.sim.step()
-                    bs.scr.update()
+                        bs.sim.step()
+                        bs.scr.update()
 
-                    current_state = self._get_state(aircraft)
-                    reward = self._calc_reward(action)
-                    self._Memory.add_sample((old_state, old_action, reward, current_state))
+                        current_state = self._get_state(aircraft)
+                        reward = self._calc_reward(action)
+                        self._Memory.add_sample((old_state, old_action, reward, current_state))
 
         print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
@@ -124,34 +126,65 @@ class Simulator:
 
     def _get_state(self, current_aircraft):
         state = np.zeros(self._state_shape)
+        for i in self._aircrafts:
+            if i == current_aircraft:
+                current_aircraft = i
+
         for aircraft in self._aircrafts:
             if current_aircraft.is_in_state(aircraft):
-                aircraft_values = np.array([ aircraft.lat,
-                                    aircraft.lon,
-                                    aircraft.alt,
-                                    aircraft.heading,
-                                    aircraft.speed,
-                                    aircraft.aceleration])
+                aircraft_values = np.array([aircraft.lat,
+                                            aircraft.lon,
+                                            aircraft.alt,
+                                            aircraft.heading,
+                                            aircraft.speed,
+                                            aircraft.aceleration])
                 state[current_aircraft.state_index(aircraft)] = aircraft_values
-
         return state
-
     def _generate_conf_aircraft(self):
         self._AirTraffic.cd.setmethod(name='ON')
         self._AirTraffic.mcre(3, acalt=400, acspd=100)
         for index in range(len(self._AirTraffic.id)):
             # target.append(self._AirTraffic.id[index])
-            idtmp = chr(randint(65, 90)) + chr(randint(65, 90)) + '{:>05}'
+            idtmp = chr(random.randint(65, 90)) + chr(random.randint(65, 90)) + '{:>05}'
             acid = idtmp.format(index)
             self._AirTraffic.creconfs(acid=acid,actype='B744',targetidx=index,dpsi=60,dcpa= 2.5,tlosh=400)
 
 
 
     def _choose_action(self, state, epsilon):
-        pass
+        if random.random() < epsilon:
+            return random.randint(0, self._num_actions - 1)  # random action
+        else:
+            return np.argmax(self._Model.predict_one(state))  # the best action given the current state
 
-    def _set_action(self, action):
-        pass
+    def _set_action(self, action, aircraft):
+        aircraft_index = self._AirTraffic.id.index(aircraft)
+        if action == 0:
+            self._AirTraffic.alt[aircraft_index] -=1200
+        elif action == 1:
+            self._AirTraffic.alt[aircraft_index] -=600
+        elif action == 2:
+            self._AirTraffic.alt[aircraft_index] +=600
+        elif action == 3:
+            self._AirTraffic.alt[aircraft_index] +=1200
+        elif action == 4:
+            self._AirTraffic.hdg[aircraft_index] +=6
+        elif action == 5:
+            self._AirTraffic.hdg[aircraft_index] -=6
+        elif action == 6:
+            self._AirTraffic.tas[aircraft_index] +=30
+        elif action == 7:
+            self._AirTraffic.tas[aircraft_index] +=20
+        elif action == 8:
+            self._AirTraffic.tas[aircraft_index] +=10
+        elif action == 9:
+            self._AirTraffic.tas[aircraft_index] -=10
+        elif action == 10:
+            self._AirTraffic.tas[aircraft_index] -=20
+        elif action == 11:
+            self._AirTraffic.tas[aircraft_index] -=30
+        else:
+            return None
 
     def _calc_reward(self, action):
         pass
