@@ -221,8 +221,8 @@ class Simulator:
             if (self._action_dict[ac_id][-1] in [0, 1] and self._action_dict[ac_id][-2] in [2, 3]) \
                     or (self._action_dict[ac_id][-1] in [2, 3] and self._action_dict[ac_id][-2] in [0, 1]):
                 return -1
-        r_a = 1 - self._AltCmd / 2000
-        r_s = 0.95 - self._SpdCmd / 100
+        r_a = 1 - abs(self._AltCmd) / 2000
+        r_s = 0.95 - abs(self._SpdCmd) / 100
         r_h = 0.3  #
         return r_a + r_s + r_h
 
