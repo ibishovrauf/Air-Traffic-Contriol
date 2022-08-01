@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import time
 import numpy as np
 
+
 @dataclass
 class AirCraft:
     id: int
@@ -19,15 +20,20 @@ class AirCraft:
     aceleration: float
 
     def distance(self, aircraft):
-        return np.sqrt((self.alt - aircraft.alt)**2 + ((self.lat - aircraft.lat)*111.139)**2 + ((self.lon - aircraft.lon)*111.139)**2)
+        return np.sqrt((self.alt - aircraft.alt) ** 2 + ((self.lat - aircraft.lat) * 111.139) ** 2 + (
+                    (self.lon - aircraft.lon) * 111.139) ** 2)
 
     def is_instate(self, aircraft):
-        if (abs(self.lon - aircraft.lon))*111.139 < 300 and (abs(self.lat - aircraft.lat))*111.139 < 300 and (abs(self.alt - aircraft.alt)) < 1000:
+        if (abs(self.lon - aircraft.lon)) * 111.139 < 300 and (abs(self.lat - aircraft.lat)) * 111.139 < 300 and (
+        abs(self.alt - aircraft.alt)) < 1000:
             return aircraft
         return None
-    
+
     def state(self, aircraft):
-        return [(self.alt - aircraft.alt)//300, (self.lat - aircraft.lat)*111.139//20 ,(self.lon - aircraft.lon)*111.139//20]
+        return [(self.alt - aircraft.alt) // 300, (self.lat - aircraft.lat) * 111.139 // 20,
+                (self.lon - aircraft.lon) * 111.139 // 20]
+
+
 def main():
     """ Start the mainloop (and possible other threads) """
     splash.show()
@@ -37,10 +43,9 @@ def main():
 
     # Main loop for BlueSky
     while not bs.sim.state == bs.END:
-        bs.sim.step()   # Update sim
-        bs.scr.update()   # GUI update
+        bs.sim.step()  # Update sim
+        bs.scr.update()  # GUI update
 
-        
         if bs.traf.cd.confpairs:
             for conflict in bs.traf.cd.confpairs_unique:
                 index_2 = bs.traf.id.index(list(conflict)[1])
@@ -54,10 +59,11 @@ def main():
 
     print('BlueSky normal end.')
 
+
 def get_state(current: int, traffic):
     aircrafts = []
     for index in range(len(traffic.id)):
-        if traffic.id[index] == current: 
+        if traffic.id[index] == current:
             current = index
         aircraft = AirCraft(
             id=traffic.id[index],
@@ -75,6 +81,7 @@ def get_state(current: int, traffic):
         if current.is_instate(aircraft) is not None:
             listik.append(aircraft)
             print(current.state(aircraft))
+
 
 if __name__ == '__main__':
     print("   *****   BlueSky Open ATM simulator *****")

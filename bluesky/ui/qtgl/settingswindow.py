@@ -26,7 +26,7 @@ def sel_palette(value, changed_fun):
 
 def sel_perf(value, changed_fun):
     wid = QComboBox()
-    wid.addItems(['openap', 'bada', 'legacy'])
+    wid.addItems(['bada', 'legacy'])
     wid.setCurrentText(value)
     wid.currentTextChanged.connect(changed_fun)
     return wid

@@ -7,6 +7,7 @@ from bluesky import traf, sim  #, settings, navdb, traf, sim, scr, tools
 from bluesky.tools import datalog, areafilter
 from bluesky.core import Entity, timed_function
 from bluesky.tools.aero import ft,kts,nm,fpm
+import bluesky as bs
 
 # Log parameters for the flight statistics log
 flstheader = \
@@ -58,6 +59,8 @@ def init_plugin():
     global area
     area = Area()
 
+
+
     # Configuration parameters
     config = {
         # The name of your plugin
@@ -106,6 +109,7 @@ class Area(Entity):
         # The FLST logger
         self.flst = datalog.crelog('FLSTLOG', None, flstheader)
         self.conflog = datalog.crelog('CONFLOG', None, confheader)
+
 
         with self.settrafarrays():
             self.insdel = np.array([], dtype=np.bool) # In deletion area or not

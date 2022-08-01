@@ -253,14 +253,9 @@ def ic(filename : str = ''):
           to load previous scenario again. '''
 
     # reset sim always
-    bs.sim.reset()
+    #bs.sim.reset()
 
     # Get the filename of new scenario
-    if not filename:
-        filename = "C:/Users/raufi/bluesky/scenario/ASAS/ASAS-01.scn"
-    #     filename = bs.scr.show_file_dialog()
-    # Clean up filename
-    filename = filename.strip()
 
     # Reset sim and open new scenario file
     if filename:

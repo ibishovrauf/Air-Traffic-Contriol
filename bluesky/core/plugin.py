@@ -9,6 +9,9 @@ from bluesky import settings
 from bluesky.core import timed_function, varexplorer as ve
 from bluesky import stack
 
+import inspect
+import os
+
 # Register settings defaults
 settings.set_variable_defaults(plugin_path='plugins', enabled_plugins=['datafeed'])
 
@@ -168,7 +171,10 @@ def init(mode):
     # Find available plugins
     Plugin.find_plugins(req_type)
     # Load plugins selected in config
+
+
     for pname in settings.enabled_plugins:
+        print('plugin name', pname)
         if pname.upper() not in Plugin.plugins_ext:
             success = Plugin.load(pname.upper())
             print(success[1])
