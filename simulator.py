@@ -3,6 +3,9 @@ from __future__ import print_function
 import pygame as pg
 import bluesky as bs
 from bluesky.ui.pygame import splash
+
+
+
 import timeit
 import numpy as np
 from dataclasses import dataclass
@@ -52,10 +55,12 @@ class Simulator:
         bs.init(gui='pygame')
         self._AirTraffic = bs.traf
 
+
     def run(self, episode, epsilon) -> list:
         """
         Runs an episode of simulation, then starts a training session
         """
+
         start_time = timeit.default_timer()
 
         # first, generate the route file for this simulation
@@ -99,6 +104,8 @@ class Simulator:
         bs.sim.quit()
         pg.quit()
         simulation_time = round(timeit.default_timer() - start_time, 1)
+
+        print('BlueSky normal end.')
 
         print("Training...")
         start_time = timeit.default_timer()
