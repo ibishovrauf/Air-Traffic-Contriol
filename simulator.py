@@ -1,5 +1,7 @@
 """ Pygame BlueSky start script """
 from __future__ import print_function
+from re import A
+import re
 import pygame as pg
 import bluesky as bs
 from bluesky.ui.pygame import splash
@@ -9,6 +11,7 @@ from bluesky.ui.pygame import splash
 import timeit
 import numpy as np
 from dataclasses import dataclass
+import random
 
 import random
 
@@ -26,15 +29,15 @@ class AirCraft:
         return np.sqrt((self.alt - aircraft.alt)**2 + ((self.lat - aircraft.lat)*111.139)**2 + ((self.lon - aircraft.lon)*111.139)**2)
 
     def is_in_state(self, aircraft):
-        if (abs(self.lon - aircraft.lon))*111.139 < 300 and (abs(self.lat - aircraft.lat))*111.139 < 300 and (abs(self.alt - aircraft.alt)) < 1000:
+        if (abs(self.lon - aircraft.lon))*111.139 < 3000 and (abs(self.lat - aircraft.lat))*111.139 < 3000 and (abs(self.alt - aircraft.alt)) < 1000:
             return True
         return False
     
     def state_index(self, aircraft):
-        return [(self.alt - aircraft.alt)//300, (self.lat - aircraft.lat)*111.139//20 ,(self.lon - aircraft.lon)*111.139//20]
+        return (int((self.alt - aircraft.alt)//300), int((self.lat - aircraft.lat)*111.139//20) ,int((self.lon - aircraft.lon)*111.139//20))
 
     def __eq__(self, aircraft) -> bool:
-        if aircraft == object:
+        if not isinstance(aircraft, str):
             return self.id == aircraft.id
         return self.id == aircraft # if aircraft is string that contein only id
 
@@ -77,6 +80,9 @@ class Simulator:
         while not bs.sim.state == bs.END and step < 6000:
             step+=1
             bs.sim.step() # Update sim
+        while not bs.sim.state == bs.END and step < 60000:
+            step+=1
+            bs.sim.step()   # Update sim
             bs.scr.update()   # GUI update
             if bs.traf.cd.confpairs:
                 self._create_aircraft_list()
@@ -88,6 +94,13 @@ class Simulator:
                         reward = 0
 
                         action = self._choose_action(current_state, epsilon)
+                        self._set_action(action, aircraft)
+
+                        current_state = self._get_state(aircraft)
+                        reward = 0
+        
+                        action = self._choose_action(current_state, epsilon)
+                        print(action)
                         self._set_action(action, aircraft)
 
                         old_state = current_state
@@ -128,7 +141,7 @@ class Simulator:
                 heading=self._AirTraffic.hdg[index],
                 speed=self._AirTraffic.tas[index]
             )
-            np.add(self._aircrafts, aircraft)
+            self._aircrafts = np.append(self._aircrafts, aircraft)
         
 
     def _get_state(self, current_aircraft):
@@ -136,6 +149,7 @@ class Simulator:
         for i in self._aircrafts:
             if i == current_aircraft:
                 current_aircraft = i
+
 
         for aircraft in self._aircrafts:
             if current_aircraft.is_in_state(aircraft):
@@ -145,6 +159,17 @@ class Simulator:
                                             aircraft.heading,
                                             aircraft.speed,
                                             aircraft.aceleration])
+
+            
+        for aircraft in self._aircrafts:
+            if current_aircraft.is_in_state(aircraft):
+                aircraft_values = np.array([    aircraft.lat,
+                                                aircraft.lon,
+                                                aircraft.alt,
+                                                aircraft.heading,
+                                                aircraft.speed,
+                                                aircraft.aceleration])
+
                 state[current_aircraft.state_index(aircraft)] = aircraft_values
         return state
     def _generate_conf_aircraft(self):
@@ -158,11 +183,19 @@ class Simulator:
 
 
 
+
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:
             return random.randint(0, self._num_actions - 1)  # random action
         else:
             return np.argmax(self._Model.predict_one(state))  # the best action given the current state
+
+    def _choose_action(self, state, epsilon):
+        if random.random() < epsilon:
+            return random.randint(0, self._num_actions - 1) # random action
+        else:
+            return np.argmax(self._Model.predict_one(state)) # the best action given the current state
+
 
     def _set_action(self, action, aircraft):
         aircraft_index = self._AirTraffic.id.index(aircraft)
