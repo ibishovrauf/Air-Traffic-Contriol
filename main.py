@@ -4,16 +4,24 @@ import datetime
 from project_logic.Memory import Memory
 from simulator import Simulator
 
+'''
+-1200, 1200
+-600, 600
++10, +20, +30,
+−10,−20, −30e 
++6, −6
+'''
 if __name__ == '__main__':
     content = configparser.ConfigParser()
     content.read('project_logic\\training.ini')
     
     memory_min = content['memory'].getint('min_size')
     memory_max = content['memory'].getint('max_size')
-
     gamma = content['agent'].get('gamma')
-    num_state = content['agent'].getint('num_state')
-    num_action = content['agent'].getint('num_action')
+    num_state = content['agent'].get('num_states')
+
+    num_state = (eval(num_state))
+    num_action = content['agent'].getint('num_actions')
 
     max_steps = content['simulation'].getint('max_steps')
     total_episodes = content['simulation'].getint('total_episodes')
