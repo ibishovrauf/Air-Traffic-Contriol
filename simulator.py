@@ -1,5 +1,6 @@
 """ Pygame BlueSky start script """
 from __future__ import print_function
+from pyexpat import model
 from re import A
 import re
 import pygame as pg
@@ -12,8 +13,8 @@ import timeit
 import numpy as np
 from dataclasses import dataclass
 import random
+from collections import defaultdict
 
-import random
 
 @dataclass
 class AirCraft:
@@ -29,17 +30,18 @@ class AirCraft:
         return np.sqrt((self.alt - aircraft.alt)**2 + ((self.lat - aircraft.lat)*111.139)**2 + ((self.lon - aircraft.lon)*111.139)**2)
 
     def is_in_state(self, aircraft):
-        if (abs(self.lon - aircraft.lon))*111.139 < 3000 and (abs(self.lat - aircraft.lat))*111.139 < 3000 and (abs(self.alt - aircraft.alt)) < 1000:
+        if (abs(self.lon - aircraft.lon))*111.139 < 100_000 and (abs(self.lat - aircraft.lat))*111.139 < 100_000 and (abs(self.alt - aircraft.alt)) < 3_000:
             return True
         return False
     
     def state_index(self, aircraft):
-        return (int((self.alt - aircraft.alt)//300), int((self.lat - aircraft.lat)*111.139//20) ,int((self.lon - aircraft.lon)*111.139//20))
+        return (int((self.alt - aircraft.alt)//300), int((self.lat - aircraft.lat)*111.139//10_000) ,int((self.lon - aircraft.lon)*111.139//10_000))
 
     def __eq__(self, aircraft) -> bool:
         if not isinstance(aircraft, str):
             return self.id == aircraft.id
         return self.id == aircraft # if aircraft is string that contein only id
+
 
 class Simulator:
 
@@ -54,6 +56,10 @@ class Simulator:
         self._max_step = max_step
         self._training_epochs = training_epochs
         self._aircrafts = np.array([])
+        self._sum_reward = 0
+        self._AltCmd = 0
+        self._SpdCmd = 0
+        self._action_dict = defaultdict(list)
 
         bs.init(gui='pygame')
         self._AirTraffic = bs.traf
@@ -72,35 +78,22 @@ class Simulator:
         # bs.sim.op()
         bs.scr.init()
 
-        # Main loop for BlueSky
-        #self._TrafficGen.genereta_scn(seed=episode)
-
         step=0
         self._generate_conf_aircraft()
         while not bs.sim.state == bs.END and step < 6000:
             step+=1
             bs.sim.step() # Update sim
-        while not bs.sim.state == bs.END and step < 60000:
-            step+=1
-            bs.sim.step()   # Update sim
             bs.scr.update()   # GUI update
             if bs.traf.cd.confpairs:
                 self._create_aircraft_list()
                 for aircrafts in self._AirTraffic.cd.confpairs_unique:
                     aircrafts = list(aircrafts)
                     for aircraft in aircrafts:
-                        print("Conflict:", aircraft)
-                        current_state = self._get_state(aircraft)
-                        reward = 0
-
-                        action = self._choose_action(current_state, epsilon)
-                        self._set_action(action, aircraft)
-
                         current_state = self._get_state(aircraft)
                         reward = 0
         
                         action = self._choose_action(current_state, epsilon)
-                        print(action)
+
                         self._set_action(action, aircraft)
 
                         old_state = current_state
@@ -110,10 +103,11 @@ class Simulator:
                         bs.scr.update()
 
                         current_state = self._get_state(aircraft)
-                        reward = self._calc_reward(action)
+                        reward = self._calc_reward(action, aircraft)
+                        self._sum_reward += reward
                         self._Memory.add_sample((old_state, old_action, reward, current_state))
 
-        print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
+        print("Total reward:", self._sum_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
         pg.quit()
         simulation_time = round(timeit.default_timer() - start_time, 1)
@@ -128,8 +122,6 @@ class Simulator:
 
         return simulation_time, training_time
 
-
-
     def _create_aircraft_list(self):
         for index in range(len(self._AirTraffic.id)):
             aircraft = AirCraft(
@@ -142,7 +134,6 @@ class Simulator:
                 speed=self._AirTraffic.tas[index]
             )
             self._aircrafts = np.append(self._aircrafts, aircraft)
-        
 
     def _get_state(self, current_aircraft):
         state = np.zeros(self._state_shape)
@@ -171,7 +162,8 @@ class Simulator:
                                                 aircraft.aceleration])
 
                 state[current_aircraft.state_index(aircraft)] = aircraft_values
-        return state
+        return state.reshape(1, -1)[0]
+
     def _generate_conf_aircraft(self):
         self._AirTraffic.cd.setmethod(name='ON')
         self._AirTraffic.mcre(3, acalt=400, acspd=100)
@@ -181,21 +173,11 @@ class Simulator:
             acid = idtmp.format(index)
             self._AirTraffic.creconfs(acid=acid,actype='B744',targetidx=index,dpsi=60,dcpa= 2.5,tlosh=400)
 
-
-
-
-    def _choose_action(self, state, epsilon):
-        if random.random() < epsilon:
-            return random.randint(0, self._num_actions - 1)  # random action
-        else:
-            return np.argmax(self._Model.predict_one(state))  # the best action given the current state
-
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:
             return random.randint(0, self._num_actions - 1) # random action
         else:
             return np.argmax(self._Model.predict_one(state)) # the best action given the current state
-
 
     def _set_action(self, action, aircraft):
         aircraft_index = self._AirTraffic.id.index(aircraft)
@@ -226,8 +208,22 @@ class Simulator:
         else:
             return None
 
-    def _calc_reward(self, action):
-        pass
+    def _calc_reward(self, action, ac_id):
+        """
+        Reward can be divided into infeasible solution and feasible solution.
+        The infeasible solution refers to the solution beyond the scope of aircraft
+        performance or in violation of actual control habits, such as the climbing action
+        followed by the descending action. The feasible solution is the solution other
+        than the infeasible solution.
+        """
+        if len(self._action_dict[ac_id]) > 1:
+            if (self._action_dict[ac_id][-1] in [0, 1] and self._action_dict[ac_id][-2] in [2, 3]) \
+                    or (self._action_dict[ac_id][-1] in [2, 3] and self._action_dict[ac_id][-2] in [0, 1]):
+                return -1
+        r_a = 1 - abs(self._AltCmd) / 2000
+        r_s = 0.95 - abs(self._SpdCmd) / 100
+        r_h = 0.3
+        return r_a + r_s + r_h
 
     def _replay(self):
 
@@ -240,7 +236,7 @@ class Simulator:
             q_s_a_d = self._Model.predict_batch(next_states)  # predict Q(next_state), for every sample
 
             # setup training arrays
-            x = np.zeros((len(batch), self._num_states))
+            x = np.zeros((len(batch), self.num_states))
             y = np.zeros((len(batch), self._num_actions))
 
             for i, b in enumerate(batch):
@@ -251,3 +247,7 @@ class Simulator:
                 y[i] = current_q  # Q(state) that includes the updated action value
 
             self._Model.train_batch(x, y)  # train the NN
+
+    @property
+    def num_states(self):
+        return self._Model.input_dim

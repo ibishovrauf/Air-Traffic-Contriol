@@ -2,36 +2,41 @@ import configparser
 import datetime
 
 from project_logic.Memory import Memory
+from project_logic.Model import Model
 from simulator import Simulator
 
-'''
--1200, 1200
--600, 600
-+10, +20, +30,
-−10,−20, −30e 
-+6, −6
-'''
 if __name__ == '__main__':
     content = configparser.ConfigParser()
     content.read('project_logic\\training.ini')
 
     memory_min = content['memory'].getint('min_size')
     memory_max = content['memory'].getint('max_size')
-    gamma = content['agent'].get('gamma')
-    num_state = content['agent'].get('num_states')
 
-    num_state = (eval(num_state))
+    gamma = float(content['agent'].get('gamma'))
+    num_state = content['agent'].get('num_states')
     num_action = content['agent'].getint('num_actions')
+    num_state = (eval(num_state))
 
     max_steps = content['simulation'].getint('max_steps')
     total_episodes = content['simulation'].getint('total_episodes')
 
     batch_size = content['model'].getint('batch_size')
-    learning_rate = content['model'].getint('learning_rate')
+    num_layers = content['model'].getint('num_layers')
+    input_dim = content['model'].getint('input_dim')
+    width_layers = content['model'].getint('width_layers')
+    learning_rate = content['model'].get('learning_rate')
+    learning_rate = float(learning_rate)
     training_epochs = content['model'].getint('training_epochs')
 
     memory = Memory(max_size=memory_max, min_size=memory_min)
-    model = None
+    model = Model(
+        num_layers=num_layers,
+        width=width_layers,
+        batch_size=batch_size,
+        learning_rate=learning_rate,
+        input_dim=input_dim,
+        output_dim=num_action
+    )
     simulation = Simulator(
         memory=memory,
         model=model,
