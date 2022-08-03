@@ -109,7 +109,7 @@ class Simulator:
                         print('Reward:',reward)
                         self._Memory.add_sample((old_state, old_action, reward, current_state))
 
-
+        print(self._action_dict)
         print("Total reward:", self._sum_neg_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
         pg.quit()
@@ -156,13 +156,16 @@ class Simulator:
         return state
 
     def _generate_conf_aircraft(self):
+        n = np.random.randint(5, 10)
         self._AirTraffic.cd.setmethod(name='ON')
-        self._AirTraffic.mcre(3, acalt=400, acspd=100)
+        self._AirTraffic.mcre(n, acalt=4000, acspd=100)
         for index in range(len(self._AirTraffic.id)):
             # target.append(self._AirTraffic.id[index])
-            idtmp = chr(random.randint(65, 90)) + chr(random.randint(65, 90)) + '{:>05}'
+            dpsi = np.random.choice([30,60,90],1)
+            tlosh = np.random.randint(low=500, high=800)
+            idtmp = chr(np.random.randint(65, 90)) + chr(np.random.randint(65, 90)) + '{:>05}'
             acid = idtmp.format(index)
-            self._AirTraffic.creconfs(acid=acid, actype='B744', targetidx=index, dpsi=60, dcpa=2.5, tlosh=400)
+            self._AirTraffic.creconfs(acid=acid, actype='B744', targetidx=index, dpsi=dpsi, dcpa=2.5, tlosh=tlosh)
 
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:
