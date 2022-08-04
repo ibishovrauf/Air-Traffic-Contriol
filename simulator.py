@@ -1,14 +1,11 @@
 """ Pygame BlueSky start script """
 from __future__ import print_function
-from pyexpat import model
-from re import A
-import re
 import pygame as pg
 import bluesky as bs
 from bluesky.ui.pygame import splash
 
 
-
+from project_logic.utils import remember_rewards
 import timeit
 import numpy as np
 from dataclasses import dataclass
@@ -56,7 +53,7 @@ class Simulator:
         self._max_step = max_step
         self._training_epochs = training_epochs
         self._aircrafts = np.array([])
-        self._sum_reward = 0
+        self._rewards = np.array([])
         self._AltCmd = 0
         self._SpdCmd = 0
         self._action_dict = defaultdict(list)
@@ -70,7 +67,7 @@ class Simulator:
         Runs an episode of simulation, then starts a training session
         """
         self._aircrafts = np.array([])
-        self._sum_reward = 0
+        self._rewards = np.array([])
         self._AltCmd = 0
         self._SpdCmd = 0
 
@@ -108,10 +105,12 @@ class Simulator:
 
                         current_state = self._get_state(aircraft)
                         reward = self._calc_reward(action, aircraft)
-                        self._sum_reward += reward
+                        self._rewards = np.append(self._rewards, reward)
                         self._Memory.add_sample((old_state, old_action, reward, current_state))
 
-        print("Total reward:", self._sum_reward, "- Epsilon:", round(epsilon, 2))
+        
+        text = "Total reward: " + str(round(self._rewards.mean(), 3)) + " - Epsilon:" + str(round(epsilon, 2))+"\n"
+        remember_rewards(self._rewards, text, epsilon)
         bs.sim.quit()
         pg.quit()
         self._AirTraffic.reset()
@@ -177,32 +176,41 @@ class Simulator:
     def _set_action(self, action, aircraft):
         aircraft_index = self._AirTraffic.id.index(aircraft)
         if action == 0:
-            self._AirTraffic.alt[aircraft_index] -=1200
+            self._AirTraffic.alt[aircraft_index] -= 1200
+            self._AltCmd = -1200
         elif action == 1:
-            self._AirTraffic.alt[aircraft_index] -=600
+            self._AirTraffic.alt[aircraft_index] -= 600
+            self._AltCmd = -600
         elif action == 2:
-            self._AirTraffic.alt[aircraft_index] +=600
+            self._AirTraffic.alt[aircraft_index] += 600
+            self._AltCmd = 600
         elif action == 3:
-            self._AirTraffic.alt[aircraft_index] +=1200
+            self._AirTraffic.alt[aircraft_index] += 1200
+            self._AltCmd = 1200
         elif action == 4:
-            self._AirTraffic.hdg[aircraft_index] +=6
+            self._AirTraffic.hdg[aircraft_index] += 6
         elif action == 5:
-            self._AirTraffic.hdg[aircraft_index] -=6
+            self._AirTraffic.hdg[aircraft_index] -= 6
         elif action == 6:
-            self._AirTraffic.tas[aircraft_index] +=30
+            self._AirTraffic.tas[aircraft_index] += 30
+            self._SpdCmd = 30
         elif action == 7:
-            self._AirTraffic.tas[aircraft_index] +=20
+            self._AirTraffic.tas[aircraft_index] += 20
+            self._SpdCmd = 20
         elif action == 8:
-            self._AirTraffic.tas[aircraft_index] +=10
+            self._AirTraffic.tas[aircraft_index] += 10
+            self._SpdCmd = 10
         elif action == 9:
-            self._AirTraffic.tas[aircraft_index] -=10
+            self._AirTraffic.tas[aircraft_index] -= 10
+            self._SpdCmd = -10
         elif action == 10:
-            self._AirTraffic.tas[aircraft_index] -=20
+            self._AirTraffic.tas[aircraft_index] -= 20
+            self._SpdCmd = -20
         elif action == 11:
-            self._AirTraffic.tas[aircraft_index] -=30
+            self._AirTraffic.tas[aircraft_index] -= 30
+            self._SpdCmd = -30
         else:
             return None
-
     def _calc_reward(self, action, ac_id):
         """
         Reward can be divided into infeasible solution and feasible solution.
