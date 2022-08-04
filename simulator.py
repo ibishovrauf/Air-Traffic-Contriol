@@ -80,7 +80,7 @@ class Simulator:
         # self._TrafficGen.genereta_scn(seed=episode)
 
         step = 0
-        self._generate_conf_aircraft()
+        self._generate_conf_aircraft(5,5)
         while not bs.sim.state == bs.END and step < 6000:
             step += 1
             bs.sim.step()  # Update sim
@@ -155,10 +155,9 @@ class Simulator:
                 state[current_aircraft.state_index(aircraft)] = aircraft_values
         return state
 
-    def _generate_conf_aircraft(self):
-        n = np.random.randint(5, 10)
+    def _generate_conf_aircraft(self, n_norm_ac: int, n_conf_ac: int):
         self._AirTraffic.cd.setmethod(name='ON')
-        self._AirTraffic.mcre(n, acalt=4000, acspd=100)
+        self._AirTraffic.mcre(n_conf_ac, acalt=4000, acspd=100)
         for index in range(len(self._AirTraffic.id)):
             # target.append(self._AirTraffic.id[index])
             dpsi = np.random.choice([30,60,90],1)
@@ -166,6 +165,7 @@ class Simulator:
             idtmp = chr(np.random.randint(65, 90)) + chr(np.random.randint(65, 90)) + '{:>05}'
             acid = idtmp.format(index)
             self._AirTraffic.creconfs(acid=acid, actype='B744', targetidx=index, dpsi=dpsi, dcpa=2.5, tlosh=tlosh)
+        self._AirTraffic.mcre(n_norm_ac, acalt=3000, acspd=100)
 
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:
