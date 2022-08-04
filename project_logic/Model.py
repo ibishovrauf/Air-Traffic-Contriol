@@ -53,8 +53,8 @@ class Model:
         """
         return self._model.predict(states)
 
-    def save_model(self):
-        self.model.save('atc_model')
+    def save_model(self, path, number):
+        self._model.save(os.path.join(path, f'trained_model{number}.h5'))
 
     @property
     def input_dim(self):

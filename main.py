@@ -3,6 +3,7 @@ import datetime
 
 from project_logic.Memory import Memory
 from project_logic.Model import Model
+from project_logic.utils import set_train_path
 from simulator import Simulator
 
 if __name__ == '__main__':
@@ -50,6 +51,7 @@ if __name__ == '__main__':
 
     episode = 0
     timestamp_start = datetime.datetime.now()
+    path = set_train_path()
 
     while episode < total_episodes:
         print('\n----- Episode', str(episode + 1), 'of', str(total_episodes))
@@ -59,6 +61,7 @@ if __name__ == '__main__':
         print('Simulation time:', simulation_time, 's - Training time:', training_time, 's - Total:',
               round(simulation_time + training_time, 1), 's')
         episode += 1
+        simulation._Model.save_model(path, episode)
 
     print("\n----- Start time:", timestamp_start)
     print("----- End time:", datetime.datetime.now())
