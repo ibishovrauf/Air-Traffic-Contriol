@@ -45,11 +45,11 @@ class AirCraft:
 
 class Simulator:
 
-    def __init__(self, memory, model, gamma, n_simulation, state_shape, num_actions, max_step, training_epochs) -> None:
+    def __init__(self, memory, model, gamma, n_traf, state_shape, num_actions, max_step, training_epochs) -> None:
         self._Memory = memory
         self._Model = model
         self._gamma = gamma
-        self._n_simulation = n_simulation
+        self._n_traf = n_traf
         self._state_shape = state_shape
         self._num_actions = num_actions 
         self._step = 0
@@ -69,6 +69,10 @@ class Simulator:
         """
         Runs an episode of simulation, then starts a training session
         """
+        self._aircrafts = np.array([])
+        self._sum_reward = 0
+        self._AltCmd = 0
+        self._SpdCmd = 0
 
         start_time = timeit.default_timer()
 
@@ -79,8 +83,8 @@ class Simulator:
         bs.scr.init()
 
         step=0
-        self._generate_conf_aircraft()
-        while not bs.sim.state == bs.END and step < 6000:
+        self._generate_conf_aircraft(self._n_traf, self._n_traf)
+        while not bs.sim.state == bs.END and step < self._max_step:
             step+=1
             bs.sim.step() # Update sim
             bs.scr.update()   # GUI update
@@ -110,9 +114,8 @@ class Simulator:
         print("Total reward:", self._sum_reward, "- Epsilon:", round(epsilon, 2))
         bs.sim.quit()
         pg.quit()
+        self._AirTraffic.reset()
         simulation_time = round(timeit.default_timer() - start_time, 1)
-
-        print('BlueSky normal end.')
 
         print("Training...")
         start_time = timeit.default_timer()
@@ -140,17 +143,6 @@ class Simulator:
         for i in self._aircrafts:
             if i == current_aircraft:
                 current_aircraft = i
-
-
-        for aircraft in self._aircrafts:
-            if current_aircraft.is_in_state(aircraft):
-                aircraft_values = np.array([aircraft.lat,
-                                            aircraft.lon,
-                                            aircraft.alt,
-                                            aircraft.heading,
-                                            aircraft.speed,
-                                            aircraft.aceleration])
-
             
         for aircraft in self._aircrafts:
             if current_aircraft.is_in_state(aircraft):
@@ -164,14 +156,17 @@ class Simulator:
                 state[current_aircraft.state_index(aircraft)] = aircraft_values
         return state.reshape(1, -1)[0]
 
-    def _generate_conf_aircraft(self):
+    def _generate_conf_aircraft(self, n_norm_ac: int, n_conf_ac: int):
         self._AirTraffic.cd.setmethod(name='ON')
-        self._AirTraffic.mcre(3, acalt=400, acspd=100)
+        self._AirTraffic.mcre(n_conf_ac, acalt=4000, acspd=100)
         for index in range(len(self._AirTraffic.id)):
             # target.append(self._AirTraffic.id[index])
-            idtmp = chr(random.randint(65, 90)) + chr(random.randint(65, 90)) + '{:>05}'
+            dpsi = np.random.choice([30,60,90],1)
+            tlosh = np.random.randint(low=400, high=600)
+            idtmp = chr(np.random.randint(65, 90)) + chr(np.random.randint(65, 90)) + '{:>05}'
             acid = idtmp.format(index)
-            self._AirTraffic.creconfs(acid=acid,actype='B744',targetidx=index,dpsi=60,dcpa= 2.5,tlosh=400)
+            self._AirTraffic.creconfs(acid=acid, actype='B744', targetidx=index, dpsi=dpsi, dcpa=2.5, tlosh=tlosh)
+        self._AirTraffic.mcre(n_norm_ac, acalt=3000, acspd=100)
 
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:

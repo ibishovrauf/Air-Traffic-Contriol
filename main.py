@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
     max_steps = content['simulation'].getint('max_steps')
     total_episodes = content['simulation'].getint('total_episodes')
+    n_traf = content['simulation'].getint('n_traf')
 
     batch_size = content['model'].getint('batch_size')
     num_layers = content['model'].getint('num_layers')
@@ -41,7 +42,7 @@ if __name__ == '__main__':
         memory=memory,
         model=model,
         gamma=gamma,
-        n_simulation=None,
+        n_traf=n_traf,
         state_shape=num_state,
         num_actions=num_action,
         max_step=max_steps,
