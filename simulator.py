@@ -95,6 +95,7 @@ class Simulator:
                         reward = 0
 
                         action = self._choose_action(current_state, epsilon)
+                        print("Action:", action)
                         self._set_action(action, aircraft)
                         self._action_dict[aircraft].append(action)
 
@@ -103,9 +104,10 @@ class Simulator:
 
                         bs.sim.step()
                         bs.scr.update()
+                        #self._replay()
 
                         current_state = self._get_state(aircraft)
-                        reward = self._calc_reward(action, aircraft)
+                        reward = self._calc_reward(action, aircraft, start_time,step)
                         print('Reward:',reward)
                         self._Memory.add_sample((old_state, old_action, reward, current_state))
 
@@ -212,7 +214,7 @@ class Simulator:
         else:
             return None
 
-    def _calc_reward(self, action, ac_id):
+    def _calc_reward(self, action, ac_id, start_time, now_time):
         """
         Reward can be divided into infeasible solution and feasible solution.
         The infeasible solution refers to the solution beyond the scope of aircraft
@@ -220,6 +222,7 @@ class Simulator:
         followed by the descending action. The feasible solution is the solution other
         than the infeasible solution.
         """
+        #Infeasible solution. _action_dict -
         if len(self._action_dict[ac_id]) > 1:
             if (self._action_dict[ac_id][-1] in [0, 1] and self._action_dict[ac_id][-2] in [2, 3]) \
                     or (self._action_dict[ac_id][-1] in [2, 3] and self._action_dict[ac_id][-2] in [0, 1]):
@@ -227,7 +230,22 @@ class Simulator:
         r_a = 1 - abs(self._AltCmd) / 2000
         r_s = 0.95 - abs(self._SpdCmd) / 100
         r_h = 0.3  #
-        return r_a + r_s + r_h
+        r_idv = r_a + r_h + r_s
+        bs.sim.step()
+        conf_aircrafts = []
+        r_overall = 0
+        if bs.traf.cd.confpairs:
+            for aircrafts in self._AirTraffic.cd.confpairs_unique:
+                aircrafts = list(aircrafts)
+                conf_aircrafts.extend(aircrafts)
+        if conf_aircrafts.count(ac_id) >= 2:
+            r_overall = -3
+        elif conf_aircrafts.count(ac_id) == 1:
+            r_overall = -0.6
+        elif ac_id not in conf_aircrafts:
+            r_overall = 1 - (now_time - start_time)
+        print('conf', conf_aircrafts)
+        return r_idv + r_overall
 
     def _replay(self):
 
