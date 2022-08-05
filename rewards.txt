@@ -28,4 +28,7 @@ Total reward: 0.956 - Epsilon:0.8
 Total reward: 1.0 - Epsilon:0.6
 Total reward: 0.994 - Epsilon:0.4
 Total reward: 1.075 - Epsilon:0.2
-
+Total reward: 1.003 - Epsilon:1.0
+Total reward: 1.035 - Epsilon:0.8
+Total reward: 1.082 - Epsilon:0.6
+Total reward: 1.13 - Epsilon:0.4
