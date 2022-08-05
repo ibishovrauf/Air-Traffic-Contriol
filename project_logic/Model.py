@@ -1,49 +1,71 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
-from keras.layers import Input, Dense
-from keras.models import Model
-from keras.optimizers import Adam
-from keras.losses import mean_squared_error
+import numpy as np
+
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras import losses
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import plot_model
+from tensorflow.keras.models import load_model
 
 class Model:
-    def __init__(self, state_size,
-                 action_size,
-                 width,
-                 layer_nums,
-                 lr,
-                 test
-                 ):
-        self.state_size = state_size
-        self.action_size = action_size
-        self.width = width
-        self.layer_nums = layer_nums
-        self.model = self._build_model()
-        self.lr = lr
-        self.test = test
+    def __init__(self, num_layers, width, batch_size, learning_rate, input_dim, output_dim):
+        self._input_dim = input_dim
+        self._output_dim = output_dim
+        self._batch_size = batch_size
+        self._learning_rate = learning_rate
+        self._model = self._build_model(num_layers, width)
 
-    def _build_model(self):
+    def _build_model(self, num_layers, width):
+        """
+        Build and compile a fully connected deep neural network
+        """
+        inputs = keras.Input(shape=(self._input_dim,))
+        x = layers.Dense(width, activation='relu')(inputs)
+        for _ in range(num_layers):
+            x = layers.Dense(width, activation='relu')(x)
+        outputs = layers.Dense(self._output_dim, activation='linear')(x)
 
-        inputs = Input(shape=(self.state_size,))
-        x = Dense(self.width, activation='relu')(inputs)
-        for _ in range(self.layer_nums):
-            x = Dense(self.layer_nums, activation='relu')(x)
-        outputs = Dense(self.action_size, activation='linear')(x)
-        model = Model(inputs=inputs,outputs=outputs)
-        optimizer = Adam(lr=self.lr)
-        model.compile(loss=mean_squared_error, optimizer=optimizer)
-        if self.test:
-            model.load_weights('atc_weights')
+        model = keras.Model(inputs=inputs, outputs=outputs, name='my_model')
+        model.compile(loss=losses.mean_squared_error, optimizer=Adam(lr=self._learning_rate))
         return model
-
-    def train(self, x, y, n_epochs = 1, batch_size = 1):
-        self.model.fit(x, y, batch_size=batch_size, epochs=n_epochs)
-
-    def predict(self, state):
-        return self.model.predict(state)
-
-    def save_model(self):
-        self.model.save('atc_model')
+    
 
 
+    def train_batch(self, states, q_sa):
+        """
+        Train the nn using the updated q-values
+        """
+        self._model.fit(states, q_sa, epochs=1, verbose=0)
 
+    def predict_one(self, state):
+        """
+        Predict the action values from a single state
+        """
+        state = np.reshape(state, [1, self._input_dim])
+        return self._model.predict(state)
+
+    def predict_batch(self, states):
+        """
+        Predict the action values from a batch of states
+        """
+        return self._model.predict(states)
+
+    def save_model(self, path, number):
+        self._model.save(os.path.join(path, f'trained_model{number}.h5'))
+
+    @property
+    def input_dim(self):
+        return self._input_dim
+
+    @property
+    def output_dim(self):
+        return self._output_dim
+
+    @property
+    def batch_size(self):
+        return self._batch_size
 
 
