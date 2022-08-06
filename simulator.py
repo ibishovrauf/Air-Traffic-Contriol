@@ -12,6 +12,8 @@ from dataclasses import dataclass
 import random
 from collections import defaultdict
 
+import copy
+
 
 @dataclass
 class AirCraft:
@@ -53,6 +55,7 @@ class Simulator:
         self._max_step = max_step
         self._training_epochs = training_epochs
         self._aircrafts = np.array([])
+        self._init_aircrafts = object
         self._rewards = np.array([])
         self._AltCmd = 0
         self._SpdCmd = 0
@@ -157,7 +160,7 @@ class Simulator:
 
     def _generate_conf_aircraft(self, n_norm_ac: int, n_conf_ac: int):
         self._AirTraffic.cd.setmethod(name='ON')
-        self._AirTraffic.mcre(n_conf_ac, acalt=4000, acspd=100)
+        self._AirTraffic.mcre(n_conf_ac, acalt=12000, acspd=100)
         for index in range(len(self._AirTraffic.id)):
             # target.append(self._AirTraffic.id[index])
             dpsi = np.random.choice([30,60,90],1)
@@ -165,7 +168,9 @@ class Simulator:
             idtmp = chr(np.random.randint(65, 90)) + chr(np.random.randint(65, 90)) + '{:>05}'
             acid = idtmp.format(index)
             self._AirTraffic.creconfs(acid=acid, actype='B744', targetidx=index, dpsi=dpsi, dcpa=2.5, tlosh=tlosh)
-        self._AirTraffic.mcre(n_norm_ac, acalt=3000, acspd=100)
+
+        self._AirTraffic.mcre(n_norm_ac, acalt=10000, acspd=100)
+        self._init_aircrafts = copy.copy(self._AirTraffic)
 
     def _choose_action(self, state, epsilon):
         if random.random() < epsilon:
@@ -234,29 +239,37 @@ class Simulator:
         than the infeasible solution.
         """
         #Infeasible solution. _action_dict -
+        self._action_dict[ac_id].append(action)
         if len(self._action_dict[ac_id]) > 1:
             if (self._action_dict[ac_id][-1] in [0, 1] and self._action_dict[ac_id][-2] in [2, 3]) \
                     or (self._action_dict[ac_id][-1] in [2, 3] and self._action_dict[ac_id][-2] in [0, 1]):
                 return -1
-        r_a = 1 - abs(self._AltCmd) / 2000
-        r_s = 0.95 - abs(self._SpdCmd) / 100
-        r_h = 0.3  #
-        r_idv = r_a + r_h + r_s
+        aircraft_index = self._AirTraffic.id.index(ac_id)
+        init_hdg = self._init_aircrafts.hdg[aircraft_index]
+        after_hdg = self._AirTraffic.hdg[aircraft_index]
+        if init_hdg < 0:
+            init_hdg = 360 - abs(init_hdg)
+        r_a = 1 - abs(self._init_aircrafts.alt[aircraft_index] - self._AirTraffic.alt[aircraft_index])/600
+        r_s = 1 - abs(self._init_aircrafts.tas[aircraft_index] - self._AirTraffic.tas[aircraft_index])/20
+        r_h = 1 - abs(init_hdg - after_hdg)/6
+        r_idv = r_a + r_s + r_h
+
+        # r_a = 1 - abs(self._AltCmd) / 2000
+        # r_s = 0.95 - abs(self._SpdCmd) / 100
+        # r_h = 0.3  #
+        # r_idv = r_a + r_h + r_s
         bs.sim.step()
         conf_aircrafts = []
-        r_overall = 0
+
         if bs.traf.cd.confpairs:
-            for aircrafts in self._AirTraffic.cd.confpairs_unique:
-                aircrafts = list(aircrafts)
-                conf_aircrafts.extend(aircrafts)
-        if conf_aircrafts.count(ac_id) >= 2:
-            r_overall = -3
-        elif conf_aircrafts.count(ac_id) == 1:
-            r_overall = -0.6
-        elif ac_id not in conf_aircrafts:
-            r_overall = 1 - (timeit.default_timer() - start_time)/180
-        print('conf', conf_aircrafts)
-        return r_idv + r_overall
+             for aircrafts in self._AirTraffic.cd.confpairs_unique:
+                 aircrafts = list(aircrafts)
+                 conf_aircrafts.extend(aircrafts)
+        r_overall = conf_aircrafts.count(ac_id)
+
+        print("heading init:",self._init_aircrafts.hdg[aircraft_index], "heading after:", self._AirTraffic.hdg[aircraft_index])
+        print("r_h:",r_h)
+        return r_idv - r_overall
 
     def _replay(self):
 
