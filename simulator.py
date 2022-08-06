@@ -247,10 +247,12 @@ class Simulator:
         aircraft_index = self._AirTraffic.id.index(ac_id)
         init_hdg = self._init_aircrafts.hdg[aircraft_index]
         after_hdg = self._AirTraffic.hdg[aircraft_index]
-        if init_hdg < 0:
+        if init_hdg < 0 and abs(after_hdg - init_hdg)>180:
+            init_hdg = 360 - abs(init_hdg)
+        elif abs(after_hdg - init_hdg) > 180:
             init_hdg = 360 - abs(init_hdg)
         r_a = 1 - abs(self._init_aircrafts.alt[aircraft_index] - self._AirTraffic.alt[aircraft_index])/600
-        r_s = 1 - abs(self._init_aircrafts.tas[aircraft_index] - self._AirTraffic.tas[aircraft_index])/20
+        r_s = 1 - abs(self._init_aircrafts.tas[aircraft_index] - self._AirTraffic.tas[aircraft_index])/10
         r_h = 1 - abs(init_hdg - after_hdg)/6
         r_idv = r_a + r_s + r_h
 
@@ -265,11 +267,17 @@ class Simulator:
              for aircrafts in self._AirTraffic.cd.confpairs_unique:
                  aircrafts = list(aircrafts)
                  conf_aircrafts.extend(aircrafts)
-        r_overall = conf_aircrafts.count(ac_id)
 
-        print("heading init:",self._init_aircrafts.hdg[aircraft_index], "heading after:", self._AirTraffic.hdg[aircraft_index])
+
+        if ac_id not in conf_aircrafts:
+            r_overall = 1
+        else:
+            r_overall = -conf_aircrafts.count(ac_id)
+
         print("r_h:",r_h)
-        return r_idv - r_overall
+        print("r_a:",r_a)
+        print("r_s:",r_s)
+        return r_idv + r_overall
 
     def _replay(self):
 
