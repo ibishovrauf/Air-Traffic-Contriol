@@ -2,6 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import numpy as np
+import sys
 
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -69,3 +70,32 @@ class Model:
         return self._batch_size
 
 
+class TestingModel:
+    def __init__(self, input_dim, model_path) -> None:
+        self._input_dim = input_dim
+        self._model = self._load_my_model(model_path)
+
+    def _load_my_model(self, model_folder_path):
+        """
+        Load the model stored in the folder specified by the model number, if it exists
+        """
+        model_file_path = os.path.join(model_folder_path, 'trained_model2.h5')
+        
+        if os.path.isfile(model_file_path):
+            loaded_model = load_model(model_file_path)
+            return loaded_model
+        else:
+            sys.exit("Model number not found")
+
+
+    def predict_one(self, state):
+        """
+        Predict the action values from a single state
+        """
+        state = np.reshape(state, [1, self._input_dim])
+        return self._model.predict(state)
+
+
+    @property
+    def input_dim(self):
+        return self._input_dim

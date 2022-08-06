@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import sys
 
 def set_train_path(models_path_name = 'model'):
     """
@@ -27,7 +28,7 @@ def remember_rewards(rewards, text, epsilon):
     f2 = plt.figure()
     plt.plot(rewards)
     data = data_path()
-    plt.savefig(data+f"\data_{epsilon}.png")
+    plt.savefig(data+f"data_{epsilon}.png")
     plt.clf()
 
     f = open("rewards.txt", "r")
@@ -38,3 +39,28 @@ def remember_rewards(rewards, text, epsilon):
     f.write(s)
     f.close()
 
+def set_test_path(models_path_name, model_n):
+    """
+    Returns a model path that identifies the model number provided as argument and a newly created 'test' path
+    """
+    model_folder_path = os.path.join(os.getcwd(), models_path_name, 'model_'+str(model_n), '')
+
+    if os.path.isdir(model_folder_path):    
+        plot_path = os.path.join(model_folder_path, 'test', '')
+        os.makedirs(os.path.dirname(plot_path), exist_ok=True)
+        return model_folder_path, plot_path
+    else: 
+        sys.exit('The model number specified does not exist in the models folder')
+
+
+def save_testing_parameters(rewards, action, conflicts: dict, path):
+    plt.figure()
+    plt.plot(rewards)
+    plt.savefig(path+f"rewards.png", facecolor='w')
+    plt.clf()
+    plt.hist(action)
+    plt.savefig(path+f"actions.png", facecolor='w')
+    plt.clf()
+    plt.hist(conflicts.values())
+    plt.savefig(path+f"conf.png", facecolor='w')
+    plt.clf()
