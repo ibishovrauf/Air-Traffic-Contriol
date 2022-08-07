@@ -8,8 +8,7 @@ Final project for the Building AI course
 
 ## Summary
 
-Describe briefly in 2-3 sentences what your project is about. About 250 characters is a nice length! 
-
+Our project is about solving conflicts between aircrafts. In our days there are a lot of aircrafts in the air and often they have some conflicts. Dispatchers try to solve them using different methods. Our project provide recommendation system that recomend actions to solve conflicts. According to this recomendations dispatchers can solve conflict fater and easierd.
 
 ## Background
 
