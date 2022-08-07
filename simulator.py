@@ -125,6 +125,9 @@ class Simulator:
         return simulation_time, training_time
 
     def _create_aircraft_list(self):
+        """
+        Create list of aircraft existing in the simulation
+        """
         for index in range(len(self._AirTraffic.id)):
             aircraft = AirCraft(
                 id=self._AirTraffic.id[index],
@@ -138,6 +141,9 @@ class Simulator:
             self._aircrafts = np.append(self._aircrafts, aircraft)
 
     def _get_state(self, current_aircraft):
+        """
+        Get state of the current aircraft
+        """
         state = np.zeros(self._state_shape)
         for i in self._aircrafts:
             if i == current_aircraft:
@@ -156,6 +162,12 @@ class Simulator:
         return state.reshape(1, -1)[0]
 
     def _generate_conf_aircraft(self, n_norm_ac: int, n_conf_ac: int):
+        """
+        Generate random aircrafts for simulation
+        Params:
+            n_norm_ac: number of aircrafts which not in conflict
+            n_conf_ac: number of conflicting aircrafts
+        """
         self._AirTraffic.cd.setmethod(name='ON')
         self._AirTraffic.mcre(n_conf_ac, acalt=4000, acspd=100)
         for index in range(len(self._AirTraffic.id)):
@@ -168,12 +180,24 @@ class Simulator:
         self._AirTraffic.mcre(n_norm_ac, acalt=3000, acspd=100)
 
     def _choose_action(self, state, epsilon):
+        """
+        Choose action depending on the current state of aircraft
+        Params:
+            state: current aircraft's state
+            epsilon: parameter
+        """
         if random.random() < epsilon:
             return random.randint(0, self._num_actions - 1) # random action
         else:
             return np.argmax(self._Model.predict_one(state)) # the best action given the current state
 
     def _set_action(self, action, aircraft):
+        """
+        Change aircraft state depending on the action
+        Params:
+            action: [0-11]. The best action given the current state
+            aircraft: conflicting aircraft id
+        """
         aircraft_index = self._AirTraffic.id.index(aircraft)
         if action == 0:
             self._AirTraffic.alt[aircraft_index] -= 1200
@@ -214,16 +238,20 @@ class Simulator:
 
     def _calc_reward(self, action, ac_id, start_time, now_time):
         """
-        Reward can be divided into infeasible solution and feasible solution.
-        The infeasible solution refers to the solution beyond the scope of aircraft
-        performance or in violation of actual control habits, such as the climbing action
-        followed by the descending action. The feasible solution is the solution other
-        than the infeasible solution.
+        Estimate reward of chosen action
+        Params:
+            action: [0-11].
+            ac_id: id of conflicting aircraft
+            start_time: when the simulation started
         """
+
+        # Infeasible solution. If our aircraft chose the climbing action(positive altitude) followed by the
+        # descending action(negative altitude)
         if len(self._action_dict[ac_id]) > 1:
             if (self._action_dict[ac_id][-1] in [0, 1] and self._action_dict[ac_id][-2] in [2, 3]) \
                     or (self._action_dict[ac_id][-1] in [2, 3] and self._action_dict[ac_id][-2] in [0, 1]):
                 return -1
+        # Feasible solution
         r_a = 1 - abs(self._AltCmd) / 2000
         r_s = 0.95 - abs(self._SpdCmd) / 100
         r_h = 0.3  #
