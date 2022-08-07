@@ -13,15 +13,14 @@ Describe briefly in 2-3 sentences what your project is about. About 250 characte
 
 ## Background
 
- With the rapid growth of flight flow, the workload of  controllers is increasing daily, and
-handling flight conflicts is the main workload. Therefore, it is necessary to provide more efficient
-conflict resolution decision-making support for controllers. In this project a Reinforcement Learning
-algorithm is proposed to resolve aircraft flight conflict with high solving efficiency.
+With the rapid growth of flight flow, the workload of controllers is increasing daily, and
+handling flight conflicts is the main workload.  To cope with the continuous increase
+of flight flow and reasonably reduce the controller’s workload,
+intelligent conflict resolution methods should be studied to
+provide the controller with decision-making support in line
+with actual operation. In our project, a Deep Reinforcement Learning algorithm is proposed to resolve aircraft flight conflict with high solving efficiency. Conflict
+resolution algorithm based on DRL has great advantages in solution speed
 
-This is how you make a list, if you need one:
-* problem 1
-* problem 2
-* etc.
 
 
 ## How is it used?
@@ -54,15 +53,10 @@ main()
 ```
 
 
-## Data sources and AI methods
-Where does your data come from? Do you collect it yourself or do you use data collected by someone else?
-If you need to use links, here's an example:
-[Twitter API](https://developer.twitter.com/en/docs)
+## Data sources and AI methods. Simulation
 
-| Syntax      | Description |
-| ----------- | ----------- |
-| Header      | Title       |
-| Paragraph   | Text        |
+At first we decided to use real data for the simulation, but there was not always a conflict in this dataset and it would be problematic for our model. Because of this, we ourselves generate conflicts between aircraft. Aircrafts are randomly created and conflicting aircrafts to these aircrafts. In addition to conflicting pairs, conventional aircraft are also created to simulate a real environment.
+
 
 ## Challenges
 
