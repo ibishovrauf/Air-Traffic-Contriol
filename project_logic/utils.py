@@ -21,10 +21,16 @@ def set_train_path(models_path_name = 'model'):
     return data_path 
 
 def data_path(data_path_name = 'foto'):
+    """
+    Create path for saving plots 
+    """
     data_path = os.path.join(os.getcwd(), data_path_name, '')
     return data_path 
 
 def remember_rewards(rewards, text, epsilon):
+    """
+    Plot and save rewards of episode 
+    """
     f2 = plt.figure()
     plt.plot(rewards)
     data = data_path()
@@ -54,6 +60,9 @@ def set_test_path(models_path_name, model_n):
 
 
 def save_testing_parameters(rewards, action, conflicts: dict, path):
+    """
+    Plot action, rewards, and conflict resoluton step in testing
+    """
     plt.figure()
     plt.plot(rewards)
     plt.savefig(path+f"rewards.png", facecolor='w')

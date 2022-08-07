@@ -1,7 +1,0 @@
-Total reward: 1.01 - Epsilon:1.0
-Total reward: 1.06 - Epsilon:0.98
-Total reward: 1.048 - Epsilon:0.96
-Total reward: 1.015 - Epsilon:0.94
-Total reward: 1.039 - Epsilon:1.0
-Total reward: 0.994 - Epsilon:0.98
-Total reward: 1.011 - Epsilon:0.96

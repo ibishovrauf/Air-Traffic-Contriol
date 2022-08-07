@@ -1,6 +1,0 @@
-screen.py line 670 get plane parameters
-
-Traffic class in Traffic.py contain planes in air and their parameters
-
-
-print(bs.traf.cd.confpairs)

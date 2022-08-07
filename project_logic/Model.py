@@ -55,6 +55,9 @@ class Model:
         return self._model.predict(states)
 
     def save_model(self, path, number):
+        """
+        Save the current model in the folder as h5 file
+        """
         self._model.save(os.path.join(path, f'trained_model{number}.h5'))
 
     @property
@@ -79,7 +82,7 @@ class TestingModel:
         """
         Load the model stored in the folder specified by the model number, if it exists
         """
-        model_file_path = os.path.join(model_folder_path, 'trained_model2.h5')
+        model_file_path = os.path.join(model_folder_path, 'trained_model70.h5')
         
         if os.path.isfile(model_file_path):
             loaded_model = load_model(model_file_path)
