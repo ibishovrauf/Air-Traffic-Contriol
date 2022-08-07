@@ -52,6 +52,11 @@ Data Sources
 | AirLabs API | https://airlabs.co/api/v9/flights?api_key=YOUR-API-KEY |
 
 
+## Prerequisites
+Install necessary libraries
+```
+$ pip install -r requirements.txt
+```
 
 ## How to run
 
