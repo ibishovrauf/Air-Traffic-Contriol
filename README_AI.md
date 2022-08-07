@@ -1,7 +1,3 @@
-<!-- This is the markdown template for the final project of the Building AI course, 
-created by Reaktor Innovations and University of Helsinki. 
-Copy the template, paste it to your GitHub README and edit! -->
-
 # Project Title
 
 Final project for the Building AI course
@@ -18,44 +14,51 @@ of flight flow and reasonably reduce the controller’s workload,
 intelligent conflict resolution methods should be studied to
 provide the controller with decision-making support in line
 with actual operation. In our project, a Deep Reinforcement Learning algorithm is proposed to resolve aircraft flight conflict with high solving efficiency. Conflict
-resolution algorithm based on DRL has great advantages in solution speed
+resolution algorithm based on DRL has great advantages in solution speed.
+
+We are sure that thanks to our project the amount off flights well increase in the world . You can ask us that why we must use your project the main purpose of our project is to decrease the number of human action in the control because human can make mistakes any time but computer does not.
 
 
 
 ## How is it used?
 
-Describe the process of using the solution. In what kind situations is the solution needed (environment, time, etc.)? Who are the users, what kinds of needs should be taken into account?
+The main goal of our project is to decrease the human actions and increase the amount of flights.Now there must be at lease 1 hours  between each flights in same direction but with the help of our project it will be decrease dramatically. In our code we used reinforcement learning which it learns things by itself, and also we used blockchain and lorawan Technology.
 
-Images will make your README look nice!
-Once you upload an image to your repository, you can link link to it like this (replace the URL with file path, if you've uploaded an image to Github.)
-![Cat](https://upload.wikimedia.org/wikipedia/commons/5/5e/Sleeping_cat_on_her_back.jpg)
+Why Blockchain?
 
-If you need to resize images, you have to use an HTML tag, like this:
-<img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Sleeping_cat_on_her_back.jpg" width="300">
+Because the planes well send us datas with the help of this technology which is very secured  no one can hack it and no one can effect the datas.
 
-This is how you create code examples:
-```
-def main():
-   countries = ['Denmark', 'Finland', 'Iceland', 'Norway', 'Sweden']
-   pop = [5615000, 5439000, 324000, 5080000, 9609000]   # not actually needed in this exercise...
-   fishers = [1891, 2652, 3800, 11611, 1757]
+Why lorawan?
 
-   totPop = sum(pop)
-   totFish = sum(fishers)
+The LoRaWAN protocol is a Low Power Wide Area Networking (LPWAN) communication protocol that functions on LoRa. The LoRaWAN specification is open so anyone can set up and operate a LoRa network.
 
-   # write your solution here
-
-   for i in range(len(countries)):
-      print("%s %.2f%%" % (countries[i], 100.0))    # current just prints 100%
-
-main()
-```
-
+LoRa is a wireless audio frequency technology that operates in a license-free radio frequency spectrum. LoRa is a physical layer protocol that uses spread spectrum modulation and supports long-range communication at the cost of a narrow bandwidth. It uses a narrow band waveform with a central frequency to send data, which makes it robust to interference.
 
 ## Data sources and AI methods. Simulation
+We use open source air traffic simulator bluesky
 
-At first we decided to use real data for the simulation, but there was not always a conflict in this dataset and it would be problematic for our model. Because of this, we ourselves generate conflicts between aircraft. Aircrafts are randomly created and conflicting aircrafts to these aircrafts. In addition to conflicting pairs, conventional aircraft are also created to simulate a real environment.
+Why BlueSky?
 
+BlueSky is meant as a tool to perform research on Air Traffic Management and Air Traffic Flows. Its goal is to provide everybody who wants to visualize, analyze or simulate air traffic.
+
+How we simulate a real-time flight? 
+
+For scenario simulation we use Aviation API from AirLabs. The AirLabs Data API is designed to provide an easy way to get real-time global flight positioning data, flight schedules, and an impressive set of airlines, routes, airports, and other relevant aviation-related information.
+
+Data Sources
+
+| Source      | Description                                            |
+|-------------|--------------------------------------------------------|
+| BlueSky     | Create some custom conflicting scenarios               |
+| AirLabs API | https://airlabs.co/api/v9/flights?api_key=YOUR-API-KEY |
+
+
+
+## How to run
+
+```
+$ py main.py
+```
 
 ## Challenges
 
@@ -63,13 +66,16 @@ What does your project _not_ solve? Which limitations and ethical considerations
 
 ## What next?
 
-How could your project grow and become something even more? What kind of skills, what kind of assistance would you  need to move on? 
+We well integrate blockchain and LoRaWAN in our system which will gives us security and fastest way to transfer datas from planes to our system . And also we would like to share our project with the bigest flight companies in the world . For provide the secury flights in the world.
 
 
 ## Acknowledgments
 
-* list here the sources of inspiration 
-* do not use code, images, data etc. from others without permission
-* when you have permission to use other people's materials, always mention the original creator and the open source / Creative Commons licence they've used
-  <br>For example: [Sleeping Cat on Her Back by Umberto Salvagnin](https://commons.wikimedia.org/wiki/File:Sleeping_cat_on_her_back.jpg#filelinks) / [CC BY 2.0](https://creativecommons.org/licenses/by/2.0)
-* etc
+
+![img.png](resolution_action.png)
+
+#### We would like to show you our fist stage and second stage progress:
+
+* 100% conflict resoluted
+* 70% from the first step
+* 30% from the second step
