@@ -1,6 +1,5 @@
-# Project Title
-
-Final project for the Building AI course
+# Team name
+### Enigma
 
 ## Summary
 
@@ -60,9 +59,6 @@ Data Sources
 $ py main.py
 ```
 
-## Challenges
-
-What does your project _not_ solve? Which limitations and ethical considerations should be taken into account when deploying a solution like this?
 
 ## What next?
 
